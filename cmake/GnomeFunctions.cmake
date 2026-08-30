@@ -114,43 +114,97 @@ function(gnome_compile_schemas)
     message(FATAL_ERROR "[gnome_compile_schemas]: This function is not yet ready!")
 endfunction()
 
-function(gnome_post_install)
-    set(flags
-        GLIB_COMPILE_SCHEMAS
-        GIO_QUERYMODULES
-        GTK_UPDATE_ICON_CACHE
-        UPDATE_DESKTOP_DATABASE
-        UPDATE_MIME_DATABASE)
+function(gnome_gdbus_codegen)
+    set(flags)
     set(args VERSION)
     set(listArgs)
 
     cmake_parse_arguments(arg "${flags}" "${args}" "${listArgs}" ${ARGN})
 
-    if(LINUX AND (NOT DEFINED ENV{DESTDIR}) AND (NOT DEFINED GNOME_POST_INSTALL_ADDED))
+    message(FATAL_ERROR "[gnome_gdbus_codegen]: This function is not yet ready!")
+endfunction()
+
+function(gnome_gtk_doc)
+    set(flags)
+    set(args VERSION)
+    set(listArgs)
+
+    cmake_parse_arguments(arg "${flags}" "${args}" "${listArgs}" ${ARGN})
+
+    message(FATAL_ERROR "[gnome_gtk_doc]: This function is not yet ready!")
+endif()
+
+function(gnome_post_install)
+    set(flags
+        GLIB_COMPILE_SCHEMAS
+        GTK_UPDATE_ICON_CACHE
+        UPDATE_DESKTOP_DATABASE
+        UPDATE_MIME_DATABASE)
+    set(args)
+    set(listArgs
+        GIO_QUERYMODULES)
+
+    cmake_parse_arguments(arg "${flags}" "${args}" "${listArgs}" ${ARGN})
+
+    if(NOT (arg_GLIB_COMPILE_SCHEMAS OR arg_GTK_UPDATE_ICON_CACHE OR arg_UPDATE_DESKTOP_DATABASE OR arg_UPDATE_MIME_DATABASE OR arg_GIO_QUERYMODULES))
+        message(WARNING "[gnome_post_install]: No proper arguments passed to the function!")
+    endif()
+
+    if(LINUX AND (NOT DEFINED GNOME_POST_INSTALL_ADDED))
         set(GNOME_POST_INSTALL_ADDED TRUE CACHE INTERNAL "")
+
+        include(GNUInstallDirs)
         
         if(arg_GLIB_COMPILE_SCHEMAS)
             find_program(GLIB_COMPILE_SCHEMAS_BINARY glib-compile-schemas REQUIRED)
 
-            install(CODE "execute_process()")
+            install(CODE
+                "if(NOT DEFINED ENV{DESTDIR})
+                execute_process(COMMAND \"${GLIB_COMPILE_SCHEMAS_BINARY}\" \"${CMAKE_INSTALL_FULL_DATADIR}/glib-2.0/schemas\")
+                endif()"
+            )
         endif()
 
         if(arg_GIO_QUERYMODULES)
             find_program(GIO_QUERYMODULES_BINARY gio-querymodules REQUIRED)
+
+            list(JOIN arg_GIO_QUERYMODULES " " GIO_QUERYMODULES_FILES)
+
+            install(CODE
+                "if(NOT DEFINED ENV{DESTDIR})
+                execute_process(COMMAND \"${GIO_QUERYMODULES_BINARY}\" \"${GIO_QUERYMODULES_FILES}\")
+                endif()"
+            )
         endif()
 
         if(arg_GTK_UPDATE_ICON_CACHE)
             find_program(GTK_UPDATE_ICON_CACHE_BINARY gtk-update-icon-cache REQUIRED)
+
+            install(CODE
+                "if(NOT DEFINED ENV{DESTDIR})
+                execute_process(COMMAND \"${GTK_UPDATE_ICON_CACHE_BINARY}\" \"${CMAKE_INSTALL_FULL_DATADIR}/icons/hicolor\")
+                endif()"
+            )
         endif()
 
         if(arg_UPDATE_DESKTOP_DATABASE)
             find_program(UPDATE_DESKTOP_DATABASE_BINARY update-desktop-database REQUIRED)
+
+            install(CODE
+                "if(NOT DEFINED ENV{DESTDIR})
+                execute_process(COMMAND \"${UPDATE_DESKTOP_DATABASE_BINARY}\" \"${CMAKE_INSTALL_FULL_DATADIR}/applications\")
+                endif()"
+            )
         endif()
 
         if(arg_UPDATE_MIME_DATABASE)
             find_program(UPDATE_MIME_DATABASE_BINARY update-mime-database REQUIRED)
+
+            install(CODE
+                "if(NOT DEFINED ENV{DESTDIR})
+                execute_process(COMMAND \"${UPDATE_MIME_DATABASE_BINARY}\" \"${CMAKE_INSTALL_FULL_DATADIR}/mime\")
+                endif()"
+            )
         endif()
     endif()
-
-    message(FATAL_ERROR "[gnome_post_install]: This function is not yet ready!")
 endfunction()
