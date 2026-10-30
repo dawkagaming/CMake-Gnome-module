@@ -132,7 +132,7 @@ function(gnome_gtk_doc)
     cmake_parse_arguments(arg "${flags}" "${args}" "${listArgs}" ${ARGN})
 
     message(FATAL_ERROR "[gnome_gtk_doc]: This function is not yet ready!")
-endif()
+endfunction()
 
 function(gnome_post_install)
     set(flags
