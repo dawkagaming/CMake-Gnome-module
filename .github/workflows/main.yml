@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+    build-debian-sid:
+      runs-on: ubuntu-latest
+      container: debian:sid
+
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Install dependencies
+          run: |
+            apt -U install -y cmake
+
+        - name: Configure
+          run: |
+            cmake -B build
+
+        - name: Build
+          run: |
+            cmake --build build
+
+        - name: Install
+          run: |
+            cmake --install build
